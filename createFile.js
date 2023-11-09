@@ -52,14 +52,25 @@ const writeJSON = (data, filePath) => {
 
 // Main function to create .jsonl file
 const createJSONDocument = () => {
-  // Find the root directory of codebase
-  // The root directory of codebase is one level up from Genie
+  // Find the root directory of codebase by looking for package.json or .git
   let codeBaseRoot = path.join(__dirname, '..');
-  while (codeBaseRoot !== '/' && !fs.existsSync(path.join(codeBaseRoot, 'codeBase'))) {
+  
+  // Define a function to check if the directory is the root of the codebase
+  const isCodebaseRoot = (dir) => {
+    // Check if either package.json or .git directory exists in this directory
+    return fs.existsSync(path.join(dir, 'package.json')) || fs.existsSync(path.join(dir, '.git'));
+  };
+  
+  // Traverse up until we find the root
+  while (codeBaseRoot !== '/' && !isCodebaseRoot(codeBaseRoot)) {
     codeBaseRoot = path.dirname(codeBaseRoot);
   }
-  codeBaseRoot = path.join(codeBaseRoot, 'codeBase');
 
+  // At this point, codeBaseRoot is either the root directory or the file system root ('/')
+  // You might want to handle the case when the file system root is reached and no codebase root was found
+  if (codeBaseRoot === '/' && !isCodebaseRoot(codeBaseRoot)) {
+    throw new Error('Unable to find the root directory of the codebase.');
+  }
   // Get all files in the project, excluding .gitignored files
   const allFiles = walkSync(codeBaseRoot);
 
